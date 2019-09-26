@@ -1,0 +1,5 @@
+<resources>
+    <string name="app_name">Unit Converter</string>
+    <string name="InchErr">Error : Enter inch value</string>
+    <string name="cmErr">Error : Enter cm value</string>
+</resources>
