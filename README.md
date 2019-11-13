@@ -3,3 +3,5 @@
   > try, catch | find textView, button
  2. HW3 : Tip Calculaotr
   > Radio Group, Button | SeekBar | CheckBox | DarkMode
+ 3. HW4 : Activity
+  > Intent | putExtra, getExtra | Result
