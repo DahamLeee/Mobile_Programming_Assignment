@@ -4,4 +4,6 @@
  2. HW3 : Tip Calculaotr
   > Radio Group, Button | SeekBar | CheckBox | DarkMode
  3. HW4 : Activity
-  > Intent | putExtra, getExtra | Result
+  > Intent | putExtra & getExtra | Result
+ 4. HW5 : MediaPlay, SharedPreferences
+  > Thread & Handler

@@ -3,11 +3,12 @@ package com.example.hw5;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
+import android.content.Intent;
+import android.content.SharedPreferences;
 import android.media.MediaPlayer;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
-import android.util.Log;
 import android.view.View;
 import android.widget.ImageButton;
 import android.widget.SeekBar;
@@ -18,14 +19,22 @@ import java.util.Date;
 
 
 public class SecondActivity extends AppCompatActivity {
+    private static final int up = 101;
+    private static final int play = 102;
+    boolean yesOrNo = false;
     private MediaPlayer mp;
     private SeekBar sb;
-    boolean first = false;
-    TextView textView5, textView6;
+    int psyLike;
+    int psyPlay;
+    int time;
+    TextView textView5, textView6, textView9;
     TextView currentTime;
     TextView endTime;
     ImageButton play_pause, stop;
     MainHandler handler;
+    ImageButton imageButton3;
+    private SharedPreferences prefs;
+    SharedPreferences.Editor ed;
 
     class MainHandler extends Handler{
         @Override
@@ -45,20 +54,34 @@ public class SecondActivity extends AppCompatActivity {
     class MyThread extends Thread{
         @Override
         public void run() {
-            while(mp.isPlaying()){
+            if(mp != null){
                 try{
-                    Thread.sleep(1000);
+                    while(mp.isPlaying()){
+                        try{
+                            Thread.sleep(1000);
+                            sb.setProgress(mp.getCurrentPosition());
+                            Message message = handler.obtainMessage();
+                            Bundle bundle = new Bundle();
+                            bundle.putInt("key", mp.getCurrentPosition());
+                            message.setData(bundle);
+
+                            handler.sendMessage(message);
+                        }catch(Exception e){
+                            e.printStackTrace();
+                        }
+                    }
                 }catch(Exception e){
                     e.printStackTrace();
+                    new MyThread().interrupt();
                 }
-                sb.setProgress(mp.getCurrentPosition());
-                Message message = handler.obtainMessage();
-                Bundle bundle = new Bundle();
-                bundle.putInt("key", mp.getCurrentPosition());
-                message.setData(bundle);
 
-                handler.sendMessage(message);
             }
+
+        }
+
+        @Override
+        public void interrupt() {
+            super.interrupt();
         }
     }
 
@@ -70,6 +93,9 @@ public class SecondActivity extends AppCompatActivity {
 
         textView5 = findViewById(R.id.textView5);
         textView6 = findViewById(R.id.textView6);
+        textView9 = findViewById(R.id.textView9);
+
+        prefs = getSharedPreferences("MUSIC",MODE_PRIVATE);
 
         Bundle bundle =getIntent().getExtras();
         if(bundle != null){
@@ -77,6 +103,14 @@ public class SecondActivity extends AppCompatActivity {
             String title = bundle.getString("title");
             textView5.setText("Artist: " + artist);
             textView6.setText("Title: " + title);
+        }
+
+        if(prefs.contains("psyLike")){
+            psyLike = prefs.getInt("psyLike", 0);
+            textView9.setText("Likes : " + psyLike);
+        }
+        if(prefs.contains("psyPlay")){
+            psyPlay = prefs.getInt("psyPlay", 0);
         }
 
         currentTime = findViewById(R.id.currentTime); // 현재 위치
@@ -116,10 +150,27 @@ public class SecondActivity extends AppCompatActivity {
             }
         });
 
+        if(prefs.contains("time")){
+            time = prefs.getInt("time", 0);
+            mp.seekTo(time);
+            sb.setProgress(time);
+            currentTime.setText(df.format(new Date(time)));
+            endTime.setText(df.format(new Date(mp.getDuration() - time)));
+        }else{
+            currentTime.setText(df.format(new Date(0)));
+            endTime.setText(df.format(new Date(mp.getDuration() - time)));
+        }
+
         play_pause = findViewById(R.id.play_pause);
         play_pause.setOnClickListener(new View.OnClickListener(){
             @Override
             public void onClick(View v) {
+                if(!yesOrNo){
+                    yesOrNo = true;
+                    ed = prefs.edit();
+                    ed.putInt("psyPlay", psyPlay + 1);
+                    ed.apply();
+                }
                 if(mp == null){
                     return;
                 }
@@ -145,15 +196,52 @@ public class SecondActivity extends AppCompatActivity {
                 play_pause.setImageResource(android.R.drawable.ic_media_play);
             }
         });
+
+        imageButton3 = findViewById(R.id.imageButton3);
+        imageButton3.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                Up();
+            }
+        });
+    }
+
+    @Override
+    protected void onStop() {
+        super.onStop();
+        new Thread().interrupt();
     }
 
     @Override
     protected void onDestroy() {
         super.onDestroy();
+        if(mp.isPlaying()){
+            mp.pause();
+        }
+        ed = prefs.edit();
+        ed.putInt("time", mp.getCurrentPosition());
+        ed.apply();
+
         if(mp != null){
             mp.stop();
             mp.release();
             mp = null;
         }
+    }
+
+    @Override
+    public void onBackPressed() {
+        Intent intent = getIntent();
+        setResult(play, intent);
+        finish();
+    }
+
+    public void Up(){
+        ed = prefs.edit();
+        ed.putInt("psyLike", psyLike + 1);
+        ed.apply();
+        Intent intent = getIntent();
+        setResult(up, intent);
+        finish();
     }
 }

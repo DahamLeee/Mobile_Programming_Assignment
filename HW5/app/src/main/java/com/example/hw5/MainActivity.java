@@ -1,5 +1,6 @@
 package com.example.hw5;
 
+import androidx.annotation.Nullable;
 import androidx.appcompat.app.AppCompatActivity;
 
 import android.annotation.SuppressLint;
@@ -12,17 +13,17 @@ import android.widget.TextView;
 
 public class MainActivity extends AppCompatActivity {
     private final int REQUEST_CODE = 2;
+    private final int up = 101;
+    private final int play = 102;
 
-    public final String key01 = "psyPlay";
-    public final String key02 = "psyLike";
-    public final String key03 = "iuPlay";
-    public final String key04 = "iuLike";
+    SharedPreferences prefs;
+    SharedPreferences.Editor ed;
 
-    int psyPlay = 4; //
-    int psyLike = 3; //
+    int psyPlay; //
+    int psyLike; //
     // 현재 재생 위치... => SecondActivity 에서 shared로 선언
-    int iuPlay = 3;
-    int iuLike = 2;
+    int iuPlay;
+    int iuLike;
 
     TextView textView, textView2; // psy
     TextView textView3, textView4; // iu
@@ -38,6 +39,9 @@ public class MainActivity extends AppCompatActivity {
         textView2 = findViewById(R.id.textView2);
         textView3 = findViewById(R.id.textView3);
         textView4 = findViewById(R.id.textView4);
+
+        prefs = getSharedPreferences("MUSIC",MODE_PRIVATE);
+        saveData();
 
         textView.setText("(PSY)-(챔피언)");
         textView2.setText("Play : " + psyPlay + " Like : " + psyLike);
@@ -55,5 +59,54 @@ public class MainActivity extends AppCompatActivity {
             }
         });
 
+    }
+    public void saveData(){
+        ed = prefs.edit();
+        if(prefs.contains("psyPlay")){
+            psyPlay = prefs.getInt("psyPlay", 0);
+        } else{
+            ed.putInt("psyPlay", 4); // psyPlay
+        }
+
+        if(prefs.contains("psyLike")){
+            psyLike = prefs.getInt("psyLike", 0);
+        } else{
+            ed.putInt("psyLike", 3); // psyLike
+        }
+
+        if(prefs.contains("iuPlay")){
+            iuPlay = prefs.getInt("iuPlay", 0);
+        }else{
+            ed.putInt("iuPlay", 3); // iuPlay
+        }
+
+        if(prefs.contains("iuLike")){
+            iuLike = prefs.getInt("iuLike", 0);
+        }else{
+            ed.putInt("iuLike", 2); // iuLike
+        }
+        ed.apply();
+    }
+
+    @SuppressLint("SetTextI18n")
+    @Override
+    protected void onActivityResult(int requestCode, int resultCode, @Nullable Intent data) {
+        super.onActivityResult(requestCode, resultCode, data);
+
+        if(requestCode == REQUEST_CODE){
+            if(data != null){
+                if(resultCode == up){
+                    if(prefs.contains("psyLike")){
+                        psyLike = prefs.getInt("psyLike", 0);
+                    }
+                }
+                if(resultCode == play){
+                    if(prefs.contains("psyPlay")){
+                        psyPlay = prefs.getInt("psyPlay", 0);
+                    }
+                }
+                textView2.setText("Play : " + psyPlay + " Like : " + psyLike);
+            }
+        }
     }
 }
